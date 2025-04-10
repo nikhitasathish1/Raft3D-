@@ -1,12 +1,12 @@
-version: '3.8'
-
 services:
   node1:
     container_name: raft3d_node1
     build: .
+    hostname: node1
+    domainname: raft.local  # Added domain
     environment:
       - NODE_ID=node1
-      - RAFT_ADDR=node1:7000
+      - RAFT_ADDR=node1.raft.local:7000  # Use FQDN
       - HTTP_ADDR=0.0.0.0:8000
       - RAFT_DIR=/raft-data
     ports:
@@ -16,20 +16,23 @@ services:
     networks:
       raft3d-net:
         aliases:
-          - node1
+          - node1.raft.local
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 10
-      start_period: 60s  # Extended initialization time
+      start_period: 60s
+    restart: unless-stopped
 
   node2:
     container_name: raft3d_node2
     build: .
+    hostname: node2
+    domainname: raft.local  # Added domain
     environment:
       - NODE_ID=node2
-      - RAFT_ADDR=node2:7000
+      - RAFT_ADDR=node2.raft.local:7000  # Use FQDN
       - HTTP_ADDR=0.0.0.0:8000
       - RAFT_DIR=/raft-data
     ports:
@@ -39,23 +42,23 @@ services:
     networks:
       raft3d-net:
         aliases:
-          - node2
-    depends_on:
-      node1:
-        condition: service_healthy
+          - node2.raft.local
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 30s
+    restart: unless-stopped
 
   node3:
     container_name: raft3d_node3
     build: .
+    hostname: node3
+    domainname: raft.local  # Added domain
     environment:
       - NODE_ID=node3
-      - RAFT_ADDR=node3:7000
+      - RAFT_ADDR=node3.raft.local:7000  # Use FQDN
       - HTTP_ADDR=0.0.0.0:8000
       - RAFT_DIR=/raft-data
     ports:
@@ -65,16 +68,14 @@ services:
     networks:
       raft3d-net:
         aliases:
-          - node3
-    depends_on:
-      node1:
-        condition: service_healthy
+          - node3.raft.local
     healthcheck:
       test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
       interval: 10s
       timeout: 10s
       retries: 10
       start_period: 30s
+    restart: unless-stopped
 
 volumes:
   node1-data:
@@ -83,3 +84,6 @@ volumes:
 
 networks:
   raft3d-net:
+    driver: bridge
+    name: raft3d-net
+    attachable: true
